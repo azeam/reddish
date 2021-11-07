@@ -102,7 +102,7 @@ class _NewPostState extends State<NewPost> {
                             style: TextStyle(fontSize: 15),
                             decoration: InputDecoration(
                                 border: OutlineInputBorder(),
-                                labelText: "Description",
+                                labelText: "Body",
                                 hintText: "Enter post body"),
                           )),
                       SizedBox(

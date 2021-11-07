@@ -1,19 +1,15 @@
 package com.azeam.reddish.post;
 
-import java.math.BigInteger;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
 import com.azeam.reddish.user.User;
 import com.azeam.reddish.user.UserService;
-import com.fasterxml.jackson.databind.ser.std.StdKeySerializers.Dynamic;
 
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -43,17 +39,6 @@ public class PostController {
         return postService.getPosts();
     }
 
-    @GetMapping("/favorites")
-    public List<Post> getFavorites(@RequestHeader("token") String token, HttpServletResponse response) {
-        User user = userService.validate(token);
-        if (user == null) {
-            response.setStatus(401);
-            return null;
-        }
-
-        return user.getFavorites();
-    }
-
     @PutMapping("/like")
     public String getLikes(@RequestHeader("token") String token, @RequestBody Like like, HttpServletResponse response) {
         User user = userService.validate(token);
@@ -63,9 +48,7 @@ public class PostController {
         }
 
         Post post = postService.getPost(like.getId());
-        System.out.println("like id : " + like.getId());
-        System.out.println("user id : " + post.get_userId());
-        System.out.println("user user id : " + user.get_id());
+
         if (post == null) {
             response.setStatus(404);
             return "There is no post with that id";
@@ -98,6 +81,31 @@ public class PostController {
         if (createdPost != null) {
             response.setStatus(200);
             return "Post " + createdPost.get_id().toString() + " has been created";
+        }
+        response.setStatus(500);
+        return "Something went wrong.";
+    }
+
+    @DeleteMapping("/delete")
+    public String deletePost(@RequestHeader("token") String token, @RequestBody String postId,
+            HttpServletResponse response) {
+        User user = userService.validate(token);
+        if (user == null) {
+            response.setStatus(401);
+            return null;
+        }
+        Post post = postService.getPost(postId);
+
+        if (!post.get_userId().equals(user.get_id())) {
+            response.setStatus(401);
+            return "Can not delete other users posts";
+        }
+
+        Post deletedPost = postService.deletePost(postId);
+
+        if (deletedPost == null) {
+            response.setStatus(200);
+            return "Post has been deleted";
         }
         response.setStatus(500);
         return "Something went wrong.";

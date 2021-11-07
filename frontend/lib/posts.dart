@@ -22,6 +22,7 @@ class Posts extends StatefulWidget {
 class _PostsState extends State<Posts> {
   Uri urlAll = Uri.parse(baseUrl + "/post/all");
   Uri urlLike = Uri.parse(baseUrl + "/post/like");
+  Uri urlDelete = Uri.parse(baseUrl + "/post/delete");
 
   String _id = "";
   bool _likes = false;
@@ -32,7 +33,6 @@ class _PostsState extends State<Posts> {
 
     if (response.statusCode == 200) {
       List postList = json.decode(response.body);
-      print(response.body);
       List<Post> posts = postList.map((i) => Post.fromJson(i)).toList();
 
       return posts;
@@ -54,6 +54,19 @@ class _PostsState extends State<Posts> {
     }
   }
 
+  Future delete() async {
+    var response = await http.delete(urlDelete,
+        headers: {
+          "token": await getToken(),
+        },
+        body: _id);
+    if (response.statusCode == 200) {
+      snackbar(context, response.body.toString());
+    } else {
+      snackbar(context, "An error occurred: " + response.body.toString());
+    }
+  }
+
   void _likePost(post) {
     setState(() {
       _likes = true;
@@ -68,6 +81,13 @@ class _PostsState extends State<Posts> {
       _id = post.id;
     });
     like();
+  }
+
+  void _deletePost(post) {
+    setState(() {
+      _id = post.id;
+    });
+    delete();
   }
 
   @override
@@ -118,6 +138,12 @@ class _PostsState extends State<Posts> {
                                           },
                                         ),
                                         Text(post.downvotes.toString()),
+                                        IconButton(
+                                          icon: Icon(Icons.delete),
+                                          onPressed: () {
+                                            _deletePost(post);
+                                          },
+                                        ),
                                       ],
                                     )),
                                 const Divider(

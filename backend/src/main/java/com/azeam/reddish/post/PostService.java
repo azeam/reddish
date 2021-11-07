@@ -2,9 +2,6 @@ package com.azeam.reddish.post;
 
 import java.util.List;
 
-import com.azeam.reddish.user.User;
-import com.azeam.reddish.user.UserRepository;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -38,5 +35,10 @@ public class PostService {
         post.getHasVoted().add(userId);
         postRepository.save(post);
         return 0;
+    }
+
+    public Post deletePost(String postId) {
+        postRepository.deleteById(postId);
+        return postRepository.findById(postId).orElse(null);
     }
 }
