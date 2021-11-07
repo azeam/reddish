@@ -1,12 +1,15 @@
 package com.azeam.reddish.post;
 
 import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
 import com.azeam.reddish.user.User;
 import com.azeam.reddish.user.UserService;
+import com.fasterxml.jackson.databind.ser.std.StdKeySerializers.Dynamic;
 
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,39 +54,44 @@ public class PostController {
         return user.getFavorites();
     }
 
-    @PutMapping("/add-favorite")
-    public String getFavorites(@RequestHeader("token") String token, @RequestBody String postName,
+    @PutMapping("/like")
+    public String getLikes(@RequestHeader("token") String token, @RequestBody Like like, HttpServletResponse response) {
+        User user = userService.validate(token);
+        if (user == null) {
+            response.setStatus(401);
+            return null;
+        }
+
+        Post post = postService.getPost(like.getId());
+        System.out.println("like id : " + like.getId());
+        System.out.println("user id : " + post.get_userId());
+        System.out.println("user user id : " + user.get_id());
+        if (post == null) {
+            response.setStatus(404);
+            return "There is no post with that id";
+        }
+        if (post.get_userId().equals(user.get_id())) {
+            response.setStatus(401);
+            return "Can not like/dislike your own posts";
+        }
+        if (post.getHasVoted().contains(user.get_id())) {
+            response.setStatus(401);
+            return "Already voted";
+        }
+        postService.like(like, user.get_id());
+        return "success";
+    }
+
+    @PostMapping("/create")
+    public String createPost(@RequestHeader("token") String token, @RequestBody Post post,
             HttpServletResponse response) {
         User user = userService.validate(token);
         if (user == null) {
             response.setStatus(401);
             return null;
         }
-        System.out.println(postName);
-        int result = postService.addFavorite(user, postName);
-        switch (result) {
-        case 1:
-            response.setStatus(404);
-            return "There is no post with that name";
-        case 0:
-            return "Post has been added to user's favorites";
-        default:
-            response.setStatus(500);
-            return "Something went wrong.";
-        }
-    }
-
-    @PostMapping("/create")
-    public String createPost(@RequestHeader("token") String token, @RequestBody Post post,
-            HttpServletResponse response) {
-        if (userService.validate(token) == null) {
-            response.setStatus(401);
-            return null;
-        }
-        System.out.println(post.get_userId());
-        User foundUser = userService.getUserById(post.get_userId());
-
-        post.setAuthor(foundUser == null ? "Unknown user" : foundUser.getName());
+        post.setAuthor(user.getName());
+        post.set_userId(user.get_id());
 
         Post createdPost = postService.createPost(post);
 

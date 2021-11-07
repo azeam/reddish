@@ -24,7 +24,7 @@ public class UserService {
         return 0;
     }
 
-    public HashMap<String, String> login(UserController.UserLogin user) {
+    public String login(UserController.UserLogin user) {
         User foundUser = userRepository.findByName(user.getUsername());
         if (foundUser == null)
             return null;
@@ -34,10 +34,8 @@ public class UserService {
 
         String token = UUID.randomUUID().toString();
         tokens.put(token, foundUser);
-        HashMap<String, String> response = new HashMap<>();
-        response.put("token", token);
-        response.put("_userId", foundUser.get_id());
-        return response;
+
+        return token;
     }
 
     public void logout(String token) {

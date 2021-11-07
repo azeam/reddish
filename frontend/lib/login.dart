@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'helpers/token_helper.dart';
-import 'podos/login_response.dart';
 import 'podos/user.dart';
 import 'posts.dart';
 import 'register.dart';
@@ -31,13 +30,11 @@ class _LoginState extends State<Login> {
         body: json.encode(user.toJson()));
 
     if (response.statusCode == 200) {
-      LoginResponse loginResponse =
-          LoginResponse.fromJson(json.decode(response.body));
-      await saveToken(loginResponse.token.toString());
+      await saveToken(response.body.toString());
       Navigator.push(
           context,
           CupertinoPageRoute(
-            builder: (context) => Posts(loginResponse.userId),
+            builder: (context) => Posts(),
           ));
     } else {
       snackbar(context, "An error occurred: " + response.body.toString());

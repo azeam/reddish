@@ -33,14 +33,14 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public HashMap<String, String> login(@RequestBody UserLogin user, HttpServletResponse response) {
-        HashMap<String, String> jsonResponse = userService.login(user);
-        if (jsonResponse.get("token") == null) {
+    public String login(@RequestBody UserLogin user, HttpServletResponse response) {
+        String token = userService.login(user);
+        if (token == null) {
             response.setStatus(406);
             return null;
         }
 
-        return jsonResponse;
+        return token;
     }
 
     @PostMapping("/logout")

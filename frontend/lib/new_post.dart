@@ -12,8 +12,7 @@ import 'variables/strings.dart';
 import 'widgets/snackbar.dart';
 
 class NewPost extends StatefulWidget {
-  NewPost(this.userId, {Key? key}) : super(key: key);
-  final String userId;
+  NewPost({Key? key}) : super(key: key);
 
   @override
   _NewPostState createState() => _NewPostState();
@@ -25,10 +24,8 @@ class _NewPostState extends State<NewPost> {
   String body = "";
   Uri url = Uri.parse(baseUrl + "/post/create");
 
-  Future save(String title, String body, String userId) async {
-    Post post =
-        Post(id: "", title: title, body: body, userId: userId.toString());
-    print(userId);
+  Future save(String title, String body) async {
+    Post post = Post(id: "", title: title, body: body);
 
     var response = await http.post(url,
         headers: {
@@ -42,7 +39,7 @@ class _NewPostState extends State<NewPost> {
       Navigator.push(
           context,
           CupertinoPageRoute(
-            builder: (context) => Posts(userId),
+            builder: (context) => Posts(),
           ));
     } else {
       snackbar(context, "An error occurred: " + response.body.toString());
@@ -51,7 +48,6 @@ class _NewPostState extends State<NewPost> {
 
   @override
   Widget build(BuildContext context) {
-    String userId = widget.userId;
     return Scaffold(
         appBar: AppBar(
           title: Text("New post"),
@@ -124,7 +120,7 @@ class _NewPostState extends State<NewPost> {
                         child: TextButton(
                           onPressed: () {
                             if (formKey.currentState!.validate()) {
-                              save(title, body, userId);
+                              save(title, body);
                             }
                           },
                           child: Text(
@@ -138,7 +134,7 @@ class _NewPostState extends State<NewPost> {
                             Navigator.push(
                                 context,
                                 CupertinoPageRoute(
-                                    builder: (context) => Posts(userId)));
+                                    builder: (context) => Posts()));
                           },
                           child: Text("Back to post list"))
                     ],

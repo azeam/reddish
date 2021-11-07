@@ -13,23 +13,22 @@ import 'widgets/menu_drawer.dart';
 import 'widgets/snackbar.dart';
 
 class Posts extends StatefulWidget {
-  Posts(this.userId, {Key? key}) : super(key: key);
-  final String userId;
+  Posts({Key? key}) : super(key: key);
 
   @override
   _PostsState createState() => _PostsState();
 }
 
 class _PostsState extends State<Posts> {
-  int _selectedList = 0;
-
   Uri urlAll = Uri.parse(baseUrl + "/post/all");
-  Uri urlFavorites = Uri.parse(baseUrl + "/post/favorites");
-  Uri urlAddFavorite = Uri.parse(baseUrl + "/post/add-favorite");
+  Uri urlLike = Uri.parse(baseUrl + "/post/like");
+
+  String _id = "";
+  bool _likes = false;
 
   Future<List<Post>> fetchPost() async {
-    final response = await http.get(_selectedList == 0 ? urlAll : urlFavorites,
-        headers: {"token": await getToken()});
+    final response =
+        await http.get(urlAll, headers: {"token": await getToken()});
 
     if (response.statusCode == 200) {
       List postList = json.decode(response.body);
@@ -41,29 +40,41 @@ class _PostsState extends State<Posts> {
     throw Exception("Failed to load posts");
   }
 
-  Future addFavorite(String id) async {
-    var response = await http.put(urlAddFavorite,
-        headers: {"token": await getToken()}, body: id);
+  Future like() async {
+    var response = await http.put(urlLike,
+        headers: {
+          "token": await getToken(),
+          "Content-Type": "application/json; charset=utf-8"
+        },
+        body: json.encode({"id": _id, "likes": _likes}));
     if (response.statusCode == 200) {
-      snackbar(context, "Post added to favorites");
+      snackbar(context, _likes ? "Post liked" : "Post disliked");
     } else {
       snackbar(context, "An error occurred: " + response.body.toString());
     }
   }
 
-  void _onMenuChanged(int index) {
+  void _likePost(post) {
     setState(() {
-      _selectedList = index;
+      _likes = true;
+      _id = post.id;
     });
+    like();
+  }
+
+  void _dislikePost(post) {
+    setState(() {
+      _likes = false;
+      _id = post.id;
+    });
+    like();
   }
 
   @override
   Widget build(BuildContext context) {
-    String userId = widget.userId;
-    print(userId);
     return Scaffold(
       appBar: AppBar(
-        title: Text(_selectedList == 0 ? "Post list" : "Favorites list"),
+        title: Text("Post list"),
       ),
       drawer: menuDrawer(context),
       body: FutureBuilder<List<Post>>(
@@ -78,62 +89,58 @@ class _PostsState extends State<Posts> {
             List<Post> posts = snapshot.data ?? [];
             return ListView.builder(
                 itemCount: posts.length,
+                shrinkWrap: true,
                 itemBuilder: (context, index) {
                   Post post = posts[index];
-                  return ListTile(
-                      title: Text(post.title),
-                      subtitle: Text(post.author),
-                      trailing: Wrap(
-                        spacing: 12,
-                        children: <Widget>[
-                          IconButton(
-                            icon: _selectedList == 0
-                                ? Icon(Icons.add_box)
-                                : Icon(Icons.favorite),
-                            onPressed: () {
-                              if (_selectedList == 0) addFavorite(post.title);
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.thumb_down),
-                            onPressed: () {
-                              if (_selectedList == 0) addFavorite(post.title);
-                            },
-                          ),
-                        ],
-                      ));
+                  return Card(
+                      child: Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                ListTile(
+                                    title: Text(post.title),
+                                    subtitle: Text(post.author),
+                                    trailing: Wrap(
+                                      spacing: 12,
+                                      children: <Widget>[
+                                        IconButton(
+                                          icon: Icon(Icons.thumb_up),
+                                          onPressed: () {
+                                            _likePost(post);
+                                          },
+                                        ),
+                                        Text(post.upvotes.toString()),
+                                        IconButton(
+                                          icon: Icon(Icons.thumb_down),
+                                          onPressed: () {
+                                            _dislikePost(post);
+                                          },
+                                        ),
+                                        Text(post.downvotes.toString()),
+                                      ],
+                                    )),
+                                const Divider(
+                                  height: 20,
+                                  thickness: 2,
+                                  indent: 20,
+                                  endIndent: 20,
+                                ),
+                                Text(post.body)
+                              ])));
                 });
           }),
-      floatingActionButton: _selectedList == 0
-          ? FloatingActionButton.extended(
-              onPressed: () {
-                Navigator.push(context,
-                    CupertinoPageRoute(builder: (context) => NewPost(userId)));
-              },
-              icon: const Icon(Icons.library_add, color: CustomColors.bright),
-              backgroundColor: CustomColors.dark,
-              label:
-                  Text("ADD POST", style: Theme.of(context).textTheme.button),
-              shape: StadiumBorder(
-                  side: BorderSide(color: CustomColors.bright, width: 1)))
-          : null,
+      floatingActionButton: FloatingActionButton.extended(
+          onPressed: () {
+            Navigator.push(
+                context, CupertinoPageRoute(builder: (context) => NewPost()));
+          },
+          icon: const Icon(Icons.library_add, color: CustomColors.bright),
+          backgroundColor: CustomColors.dark,
+          label: Text("ADD POST", style: Theme.of(context).textTheme.button),
+          shape: StadiumBorder(
+              side: BorderSide(color: CustomColors.bright, width: 1))),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.all_inclusive),
-            label: 'All',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
-            label: 'Favorites',
-          ),
-        ],
-        currentIndex: _selectedList,
-        selectedItemColor: CustomColors.orange,
-        backgroundColor: CustomColors.dark,
-        onTap: _onMenuChanged,
-      ),
     );
   }
 }

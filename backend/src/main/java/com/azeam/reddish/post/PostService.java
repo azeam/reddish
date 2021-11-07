@@ -18,16 +18,25 @@ public class PostService {
         return postRepository.save(post);
     }
 
+    public Post getPost(String id) {
+        return postRepository.findById(id).orElse(null);
+    }
+
     public List<Post> getPosts() {
         return postRepository.findAll();
     }
 
-    public int addFavorite(User user, String title) {
-        Post post = postRepository.findByTitle(title);
+    public int like(Like like, String userId) {
+        Post post = postRepository.findById(like.getId()).orElse(null);
         if (post == null)
             return 1;
-
-        user.getFavorites().add(post);
+        if (like.getLikes()) {
+            post.setUpvotes(post.getUpvotes() + 1);
+        } else {
+            post.setDownvotes(post.getDownvotes() + 1);
+        }
+        post.getHasVoted().add(userId);
+        postRepository.save(post);
         return 0;
     }
 }

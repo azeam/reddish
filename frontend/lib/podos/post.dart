@@ -5,7 +5,6 @@ class Post {
   String id;
   int upvotes;
   int downvotes;
-  String userId;
 
   Post(
       {required this.title,
@@ -13,8 +12,7 @@ class Post {
       required this.id,
       this.upvotes = 0,
       this.downvotes = 0,
-      this.author = "",
-      required this.userId});
+      this.author = ""});
 
   factory Post.fromJson(Map<String, dynamic> json) {
     return Post(
@@ -23,13 +21,11 @@ class Post {
         id: json['_id'],
         upvotes: json['upvotes'],
         downvotes: json['downvotes'],
-        userId: json['_userId'],
         author: json['author']);
   }
 
   Map<String, dynamic> toJson() => {
         "title": this.title,
         "body": this.body,
-        "_userId": this.userId.toString()
       };
 }

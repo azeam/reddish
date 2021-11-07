@@ -1,6 +1,8 @@
 package com.azeam.reddish.post;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.azeam.reddish.user.User;
 import com.azeam.reddish.user.UserRepository;
@@ -21,12 +23,13 @@ public class Post {
     private String title, body;
     private int upvotes, downvotes;
     private String author;
+    private List<String> hasVoted;
 
-    public Post(String _userId, String title, String body, int upvotes, int downvotes) {
+    public Post(String title, String body, int upvotes, int downvotes) {
         this.title = title;
         this.body = body;
-        this._userId = _userId;
         this.upvotes = upvotes;
         this.downvotes = downvotes;
+        this.hasVoted = new ArrayList<>();
     }
 }
