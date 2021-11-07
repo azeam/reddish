@@ -10,5 +10,5 @@ import org.springframework.stereotype.Repository;
 public interface UserRepository extends MongoRepository<User, String> {
     final Map<String, User> users = new HashMap<>();
 
-    public User findByName(String firstName);
+    public User findByName(String username);
 }

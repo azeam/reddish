@@ -5,6 +5,8 @@ import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+
 import javax.servlet.http.HttpServletResponse;
 
 @CrossOrigin
@@ -15,7 +17,7 @@ public class UserController {
     @Autowired
     UserService userService;
 
-    @PutMapping("/register")
+    @PostMapping("/register")
     public String registerUser(@RequestBody UserCreate user, HttpServletResponse response) {
         int code = userService.registerUser(user);
         switch (code) {
@@ -31,15 +33,14 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public String login(@RequestHeader("username") String username, @RequestHeader("password") String password,
-            HttpServletResponse response) {
-        String token = userService.login(username, password);
-        if (token == null) {
+    public HashMap<String, String> login(@RequestBody UserLogin user, HttpServletResponse response) {
+        HashMap<String, String> jsonResponse = userService.login(user);
+        if (jsonResponse.get("token") == null) {
             response.setStatus(406);
             return null;
         }
 
-        return token;
+        return jsonResponse;
     }
 
     @PostMapping("/logout")
@@ -50,6 +51,13 @@ public class UserController {
     @Getter
     @Setter
     public static final class UserCreate {
+        private String username;
+        private String password;
+    }
+
+    @Getter
+    @Setter
+    public static final class UserLogin {
         private String username;
         private String password;
     }

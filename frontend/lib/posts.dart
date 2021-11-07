@@ -13,7 +13,8 @@ import 'widgets/menu_drawer.dart';
 import 'widgets/snackbar.dart';
 
 class Posts extends StatefulWidget {
-  Posts({Key? key}) : super(key: key);
+  Posts(this.userId, {Key? key}) : super(key: key);
+  final String userId;
 
   @override
   _PostsState createState() => _PostsState();
@@ -29,23 +30,20 @@ class _PostsState extends State<Posts> {
   Future<List<Post>> fetchPost() async {
     final response = await http.get(_selectedList == 0 ? urlAll : urlFavorites,
         headers: {"token": await getToken()});
+
     if (response.statusCode == 200) {
-      var postList = json.decode(response.body) as List;
+      List postList = json.decode(response.body);
+      print(response.body);
       List<Post> posts = postList.map((i) => Post.fromJson(i)).toList();
+
       return posts;
-    } else {
-      Navigator.push(
-          context,
-          CupertinoPageRoute(
-            builder: (context) => Posts(),
-          ));
     }
     throw Exception("Failed to load posts");
   }
 
-  Future addFavorite(String name) async {
+  Future addFavorite(String id) async {
     var response = await http.put(urlAddFavorite,
-        headers: {"token": await getToken()}, body: name);
+        headers: {"token": await getToken()}, body: id);
     if (response.statusCode == 200) {
       snackbar(context, "Post added to favorites");
     } else {
@@ -61,6 +59,8 @@ class _PostsState extends State<Posts> {
 
   @override
   Widget build(BuildContext context) {
+    String userId = widget.userId;
+    print(userId);
     return Scaffold(
       appBar: AppBar(
         title: Text(_selectedList == 0 ? "Post list" : "Favorites list"),
@@ -81,14 +81,26 @@ class _PostsState extends State<Posts> {
                 itemBuilder: (context, index) {
                   Post post = posts[index];
                   return ListTile(
-                      title: Text(post.name),
-                      trailing: IconButton(
-                        icon: _selectedList == 0
-                            ? Icon(Icons.add_box)
-                            : Icon(Icons.favorite),
-                        onPressed: () {
-                          if (_selectedList == 0) addFavorite(post.name);
-                        },
+                      title: Text(post.title),
+                      subtitle: Text(post.author),
+                      trailing: Wrap(
+                        spacing: 12,
+                        children: <Widget>[
+                          IconButton(
+                            icon: _selectedList == 0
+                                ? Icon(Icons.add_box)
+                                : Icon(Icons.favorite),
+                            onPressed: () {
+                              if (_selectedList == 0) addFavorite(post.title);
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.thumb_down),
+                            onPressed: () {
+                              if (_selectedList == 0) addFavorite(post.title);
+                            },
+                          ),
+                        ],
                       ));
                 });
           }),
@@ -96,7 +108,7 @@ class _PostsState extends State<Posts> {
           ? FloatingActionButton.extended(
               onPressed: () {
                 Navigator.push(context,
-                    CupertinoPageRoute(builder: (context) => NewPost()));
+                    CupertinoPageRoute(builder: (context) => NewPost(userId)));
               },
               icon: const Icon(Icons.library_add, color: CustomColors.bright),
               backgroundColor: CustomColors.dark,

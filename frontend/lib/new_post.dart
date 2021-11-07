@@ -4,7 +4,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import 'helpers/number_helper.dart';
 import 'helpers/token_helper.dart';
 import 'podos/post.dart';
 import 'posts.dart';
@@ -13,7 +12,8 @@ import 'variables/strings.dart';
 import 'widgets/snackbar.dart';
 
 class NewPost extends StatefulWidget {
-  NewPost({Key? key}) : super(key: key);
+  NewPost(this.userId, {Key? key}) : super(key: key);
+  final String userId;
 
   @override
   _NewPostState createState() => _NewPostState();
@@ -21,11 +21,16 @@ class NewPost extends StatefulWidget {
 
 class _NewPostState extends State<NewPost> {
   final formKey = GlobalKey<FormState>();
-  Post post = Post(name: "", description: "", price: 0);
+  String title = "";
+  String body = "";
   Uri url = Uri.parse(baseUrl + "/post/create");
 
-  Future save() async {
-    var response = await http.put(url,
+  Future save(String title, String body, String userId) async {
+    Post post =
+        Post(id: "", title: title, body: body, userId: userId.toString());
+    print(userId);
+
+    var response = await http.post(url,
         headers: {
           "token": await getToken(),
           "content-type": "application/json"
@@ -37,7 +42,7 @@ class _NewPostState extends State<NewPost> {
       Navigator.push(
           context,
           CupertinoPageRoute(
-            builder: (context) => Posts(),
+            builder: (context) => Posts(userId),
           ));
     } else {
       snackbar(context, "An error occurred: " + response.body.toString());
@@ -46,6 +51,7 @@ class _NewPostState extends State<NewPost> {
 
   @override
   Widget build(BuildContext context) {
+    String userId = widget.userId;
     return Scaffold(
         appBar: AppBar(
           title: Text("New post"),
@@ -68,33 +74,32 @@ class _NewPostState extends State<NewPost> {
                         ),
                       ),
                       TextFormField(
-                        controller: TextEditingController(text: post.name),
+                        controller: TextEditingController(text: title),
                         onChanged: (val) {
-                          post.name = val;
+                          title = val;
                         },
                         validator: (value) {
                           if (value!.isEmpty) {
-                            return "Post name is empty";
+                            return "Post title is empty";
                           }
                           return null;
                         },
                         style: TextStyle(fontSize: 15),
                         decoration: InputDecoration(
                             border: OutlineInputBorder(),
-                            labelText: "Post name",
-                            hintText: "Enter a post name"),
+                            labelText: "Title",
+                            hintText: "Enter a post title"),
                       ),
                       Padding(
                           padding: const EdgeInsets.only(top: 15),
                           child: TextFormField(
-                            controller:
-                                TextEditingController(text: post.description),
+                            controller: TextEditingController(text: body),
                             onChanged: (val) {
-                              post.description = val;
+                              body = val;
                             },
                             validator: (value) {
                               if (value!.isEmpty) {
-                                return "Description is empty";
+                                return "Body is empty";
                               }
                               return null;
                             },
@@ -102,30 +107,7 @@ class _NewPostState extends State<NewPost> {
                             decoration: InputDecoration(
                                 border: OutlineInputBorder(),
                                 labelText: "Description",
-                                hintText: "Enter post description"),
-                          )),
-                      Padding(
-                          padding: const EdgeInsets.only(top: 15),
-                          child: TextFormField(
-                            controller: TextEditingController(
-                                text: post.price.toString()),
-                            onChanged: (val) {
-                              post.price = int.parse(val);
-                            },
-                            validator: (value) {
-                              if (value!.isEmpty) {
-                                return "Price is empty";
-                              }
-                              if (!isNumeric(value)) {
-                                return "Not a valid price";
-                              }
-                              return null;
-                            },
-                            style: TextStyle(fontSize: 15),
-                            decoration: InputDecoration(
-                                border: OutlineInputBorder(),
-                                labelText: "Price",
-                                hintText: "Enter post price"),
+                                hintText: "Enter post body"),
                           )),
                       SizedBox(
                         height: 50,
@@ -142,7 +124,7 @@ class _NewPostState extends State<NewPost> {
                         child: TextButton(
                           onPressed: () {
                             if (formKey.currentState!.validate()) {
-                              save();
+                              save(title, body, userId);
                             }
                           },
                           child: Text(
@@ -156,7 +138,7 @@ class _NewPostState extends State<NewPost> {
                             Navigator.push(
                                 context,
                                 CupertinoPageRoute(
-                                    builder: (context) => Posts()));
+                                    builder: (context) => Posts(userId)));
                           },
                           child: Text("Back to post list"))
                     ],

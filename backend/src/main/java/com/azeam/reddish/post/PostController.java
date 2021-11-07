@@ -1,5 +1,6 @@
 package com.azeam.reddish.post;
 
+import java.math.BigInteger;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
@@ -7,9 +8,11 @@ import javax.servlet.http.HttpServletResponse;
 import com.azeam.reddish.user.User;
 import com.azeam.reddish.user.UserService;
 
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -70,24 +73,25 @@ public class PostController {
         }
     }
 
-    @PutMapping("/create")
+    @PostMapping("/create")
     public String createPost(@RequestHeader("token") String token, @RequestBody Post post,
             HttpServletResponse response) {
         if (userService.validate(token) == null) {
             response.setStatus(401);
             return null;
         }
+        System.out.println(post.get_userId());
+        User foundUser = userService.getUserById(post.get_userId());
 
-        int result = postService.createPost(post);
-        switch (result) {
-        case 1:
-            response.setStatus(409);
-            return "There is already a post with that name";
-        case 0:
-            return "Post has been created";
-        default:
-            response.setStatus(500);
-            return "Something went wrong.";
+        post.setAuthor(foundUser == null ? "Unknown user" : foundUser.getName());
+
+        Post createdPost = postService.createPost(post);
+
+        if (createdPost != null) {
+            response.setStatus(200);
+            return "Post " + createdPost.get_id().toString() + " has been created";
         }
+        response.setStatus(500);
+        return "Something went wrong.";
     }
 }

@@ -18,11 +18,11 @@ class Register extends StatefulWidget {
 
 class _RegisterState extends State<Register> {
   final formKey = GlobalKey<FormState>();
-  User user = User();
+  User user = User(username: "", password: "");
   Uri url = Uri.parse(baseUrl + "/user/register");
 
   Future save() async {
-    var response = await http.put(url,
+    var response = await http.post(url,
         headers: {"Content-Type": "application/json"},
         body: json.encode(user.toJson()));
     if (response.statusCode == 200) {

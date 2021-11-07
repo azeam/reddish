@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 public interface PostRepository extends MongoRepository<Post, String> {
     Map<String, Post> posts = new HashMap<>();
 
-    public Post findByName(String name);
+    public Post findByTitle(String title);
 
     public List<Post> findAll();
 }

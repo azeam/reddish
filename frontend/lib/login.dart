@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'helpers/token_helper.dart';
+import 'podos/login_response.dart';
 import 'podos/user.dart';
 import 'posts.dart';
 import 'register.dart';
@@ -19,18 +22,22 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   final formKey = GlobalKey<FormState>();
-  User user = User();
+  User user = User(username: "", password: "");
   Uri url = Uri.parse(baseUrl + "/user/login");
 
   Future save() async {
-    var response = await http.post(url, headers: user.toJson());
+    var response = await http.post(url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode(user.toJson()));
 
     if (response.statusCode == 200) {
-      await saveToken(response.body.toString());
+      LoginResponse loginResponse =
+          LoginResponse.fromJson(json.decode(response.body));
+      await saveToken(loginResponse.token.toString());
       Navigator.push(
           context,
           CupertinoPageRoute(
-            builder: (context) => Posts(),
+            builder: (context) => Posts(loginResponse.userId),
           ));
     } else {
       snackbar(context, "An error occurred: " + response.body.toString());
